@@ -98,9 +98,18 @@ written up separately and are being filed upstream:
 3. **quantstats, `conditional_value_at_risk`**: the threshold is parametric
    Gaussian VaR, as the docstring says, but the tail statistic is the
    empirical mean below that threshold. That combination matches neither the
-   Gaussian expected-shortfall closed form nor any empirical estimator, and
-   it degenerates on an all-positive series where no observation falls below
-   the threshold at all.
+   Gaussian expected-shortfall closed form nor any empirical estimator.
+   Worse, the function ends `return c_var if ~np.isnan(c_var) else var`, so
+   when no observation falls below the parametric threshold the empty mean
+   gives NaN and the function returns the VaR itself. CVaR then equals VaR
+   exactly, which cannot happen for a real expected shortfall on a
+   continuous distribution. It fires on any all-positive series and on short
+   samples: on a 756-point all-positive series both come back -0.00065106,
+   and on a seven-point sample both come back -0.02611821, with zero
+   observations below the threshold in each case.
+
+Filed upstream as stefan-jansen/empyrical-reloaded#54,
+ranaroussi/quantstats#546 and ranaroussi/quantstats#547.
 
 The distinction matters for how these are reported. A library computing a
 different published estimator from its peers is a documentation issue and is
